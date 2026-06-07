@@ -1,0 +1,92 @@
+{
+  "best_model": "Random Forest",
+  "accuracy": 100.0,
+  "cv_accuracy": 100.0,
+  "auc": 1.0,
+  "confusion_matrix": [
+    [
+      7,
+      0
+    ],
+    [
+      0,
+      7
+    ]
+  ],
+  "classification_report": {
+    "Safe": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 7.0
+    },
+    "Phishing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 7.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 14.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 14.0
+    }
+  },
+  "model_comparison": {
+    "Random Forest": {
+      "accuracy": 100.0,
+      "cv_accuracy": 100.0,
+      "auc": 1.0
+    },
+    "Logistic Regression": {
+      "accuracy": 100.0,
+      "cv_accuracy": 100.0,
+      "auc": 1.0
+    },
+    "Gradient Boosting": {
+      "accuracy": 100.0,
+      "cv_accuracy": 100.0,
+      "auc": 1.0
+    }
+  },
+  "live_predictions": [
+    {
+      "email": "URGENT: Your account has been suspended! Verify immediately at http://paypal-sec",
+      "label": "PHISHING",
+      "confidence": 100.0
+    },
+    {
+      "email": "Hi team, please review the attached report and share feedback by end of day Frid",
+      "label": "SAFE",
+      "confidence": 99.0
+    },
+    {
+      "email": "Congratulations! You won $10,000. Claim your prize at http://lottery-win.tk/clai",
+      "label": "PHISHING",
+      "confidence": 98.0
+    },
+    {
+      "email": "Your flight AI-302 is confirmed. Check-in opens 48 hours before departure at air",
+      "label": "SAFE",
+      "confidence": 90.0
+    },
+    {
+      "email": "ALERT: Unusual login detected on your account. Confirm at http://google-verify.r",
+      "label": "PHISHING",
+      "confidence": 98.0
+    },
+    {
+      "email": "Meeting rescheduled to 3pm tomorrow. Please update your calendar accordingly.",
+      "label": "SAFE",
+      "confidence": 99.0
+    }
+  ]
+}
