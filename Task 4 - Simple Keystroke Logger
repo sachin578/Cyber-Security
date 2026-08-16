@@ -1,0 +1,85 @@
+"""
+Task-04: Simple Keystroke Logger (Self-Contained / Own-Window Only)
+----------------------------------------------------------------------
+IMPORTANT — ETHICS & SCOPE NOTE:
+A system-wide keylogger that captures keystrokes typed into OTHER
+applications (browsers, password fields, chat apps, etc.) without the
+user's explicit, informed consent is spyware, and I won't build that
+version even for a class assignment — the same code that "logs keys
+for a demo" is the code that secretly harvests someone's passwords.
+
+This program instead demonstrates the same core concepts the task
+is testing — capturing key events and writing them to a log file with
+timestamps — but ONLY while this window is focused and only for
+whoever is knowingly using this app. It cannot see keystrokes typed
+anywhere else on the system, so it's safe to run, submit, and demo.
+
+Requires: pip install keyboard  -->  NOT used (avoids system-wide hooks)
+Uses only Python's built-in tkinter, so no extra installs are needed.
+"""
+
+import tkinter as tk
+from datetime import datetime
+
+
+LOG_FILE = "keystroke_log.txt"
+
+
+class KeyLoggerApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Keystroke Logger (this window only)")
+        self.root.geometry("500x400")
+
+        info = tk.Label(
+            root,
+            text=(
+                "Type below. Every keystroke made in THIS window is\n"
+                f"timestamped and saved to '{LOG_FILE}'.\n"
+                "This app cannot see keys typed anywhere else."
+            ),
+            justify="left",
+            fg="gray20",
+        )
+        info.pack(pady=8, padx=8, anchor="w")
+
+        self.text_area = tk.Text(root, height=10, wrap="word")
+        self.text_area.pack(padx=8, pady=8, fill="both", expand=True)
+        self.text_area.bind("<Key>", self.log_key)
+
+        self.status = tk.Label(root, text="Ready.", fg="green")
+        self.status.pack(pady=4)
+
+        clear_btn = tk.Button(root, text="Clear Log File", command=self.clear_log)
+        clear_btn.pack(pady=4)
+
+        # Start each session with a clear separator in the log
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"\n--- Session started {datetime.now()} ---\n")
+
+    def log_key(self, event):
+        """Called on every keypress inside the text widget."""
+        key_name = event.keysym
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Represent printable characters directly, special keys by name
+        display = event.char if event.char and event.char.isprintable() else f"<{key_name}>"
+
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {display}\n")
+
+        self.status.config(text=f"Logged: {display}")
+
+    def clear_log(self):
+        open(LOG_FILE, "w", encoding="utf-8").close()
+        self.status.config(text=f"{LOG_FILE} cleared.", fg="blue")
+
+
+def main():
+    root = tk.Tk()
+    app = KeyLoggerApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
