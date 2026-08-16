@@ -1,0 +1,120 @@
+"""
+Task-05: Network Packet Analyzer
+------------------------------------
+Captures live network packets on the machine it's run on and displays
+key information for each one: source/destination IP, protocol, and a
+preview of the payload.
+
+ETHICAL USE NOTE:
+Only run this on a network you own or have explicit permission to
+monitor (e.g. your own home network or a lab environment). Capturing
+traffic on networks you don't control or don't have permission to
+monitor is illegal in most jurisdictions. This tool is intended for
+learning how packet capture / protocol analysis works.
+
+Requires: pip install scapy
+Must be run with administrator/root privileges (raw sockets require it):
+  Windows : run terminal "as Administrator"
+  macOS/Linux : sudo python3 packet_analyzer.py
+"""
+
+from scapy.all import sniff, IP, TCP, UDP, ICMP, Raw
+from datetime import datetime
+import argparse
+
+
+def format_payload(packet, max_len: int = 60) -> str:
+    """Return a printable preview of the packet's raw payload, if any."""
+    if packet.haslayer(Raw):
+        try:
+            raw_bytes = bytes(packet[Raw].load)
+            text = raw_bytes.decode("utf-8", errors="replace")
+            text = text.replace("\n", "\\n").replace("\r", "")
+            return text[:max_len] + ("..." if len(text) > max_len else "")
+        except Exception:
+            return "<binary data>"
+    return "<no payload>"
+
+
+def get_protocol_name(packet) -> str:
+    if packet.haslayer(TCP):
+        return "TCP"
+    elif packet.haslayer(UDP):
+        return "UDP"
+    elif packet.haslayer(ICMP):
+        return "ICMP"
+    else:
+        return "OTHER"
+
+
+def handle_packet(packet):
+    if not packet.haslayer(IP):
+        return  # skip non-IP traffic (e.g. ARP) for this simple analyzer
+
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    src_ip = packet[IP].src
+    dst_ip = packet[IP].dst
+    protocol = get_protocol_name(packet)
+
+    src_port = dst_port = None
+    if packet.haslayer(TCP):
+        src_port = packet[TCP].sport
+        dst_port = packet[TCP].dport
+    elif packet.haslayer(UDP):
+        src_port = packet[UDP].sport
+        dst_port = packet[UDP].dport
+
+    port_info = f":{src_port} -> :{dst_port}" if src_port else ""
+    payload_preview = format_payload(packet)
+
+    print(f"[{timestamp}] {protocol:6} {src_ip}{port_info if src_port else ''} "
+          f"-> {dst_ip}{'' if not src_port else ''}")
+    print(f"           Payload: {payload_preview}")
+    print("-" * 70)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Simple educational network packet analyzer (requires admin/root)."
+    )
+    parser.add_argument(
+        "-c", "--count", type=int, default=0,
+        help="Number of packets to capture (0 = capture until Ctrl+C, default: 0)"
+    )
+    parser.add_argument(
+        "-f", "--filter", type=str, default="ip",
+        help="BPF filter, e.g. 'tcp', 'udp port 53', 'icmp' (default: 'ip')"
+    )
+    parser.add_argument(
+        "-i", "--interface", type=str, default=None,
+        help="Network interface to sniff on (default: scapy's default interface)"
+    )
+    args = parser.parse_args()
+
+    print("=" * 70)
+    print("        NETWORK PACKET ANALYZER — EDUCATIONAL USE ONLY")
+    print("=" * 70)
+    print("Only monitor networks you own or are explicitly authorized to.")
+    print(f"Filter: '{args.filter}'  |  Count: {'unlimited (Ctrl+C to stop)' if args.count == 0 else args.count}")
+    print("=" * 70)
+
+    try:
+        sniff(
+            filter=args.filter,
+            prn=handle_packet,
+            count=args.count,
+            iface=args.interface,
+            store=False,
+        )
+    except PermissionError:
+        print("\nERROR: Permission denied. Run this script as Administrator/root.")
+    except KeyboardInterrupt:
+        print("\nCapture stopped by user.")
+    except OSError as e:
+        print(f"\nERROR: {e}")
+        print("Check that you specified a valid network interface and have the")
+        print("required privileges (Administrator on Windows, sudo on macOS/Linux).")
+
+
+if __name__ == "__main__":
+    main()
