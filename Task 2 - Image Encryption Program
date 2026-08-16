@@ -1,0 +1,135 @@
+"""
+Task-02: Pixel Manipulation for Image Encryption
+--------------------------------------------------
+A simple image encryption/decryption tool that works by manipulating
+pixel values. Two techniques are provided:
+
+  1. XOR Cipher   - XORs every pixel's R, G, B values with a key (0-255).
+                     XOR-ing twice with the same key restores the original
+                     image, so the SAME operation encrypts and decrypts.
+
+  2. Add Cipher   - Adds a numeric key to each pixel value (mod 256) to
+                     encrypt, and subtracts the same key (mod 256) to
+                     decrypt.
+
+Requires Pillow:  pip install pillow
+"""
+
+from PIL import Image
+import os
+
+
+def xor_encrypt_decrypt(image_path: str, key: int, output_path: str):
+    """
+    Encrypt or decrypt an image by XOR-ing every pixel's RGB values
+    with `key`. Applying this function twice with the same key on the
+    same image returns the original image (XOR is its own inverse).
+    """
+    img = Image.open(image_path).convert("RGB")
+    pixels = img.load()
+    width, height = img.size
+
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            pixels[x, y] = (r ^ key, g ^ key, b ^ key)
+
+    img.save(output_path)
+    print(f"Saved: {output_path}")
+
+
+def add_encrypt(image_path: str, key: int, output_path: str):
+    """Encrypt an image by adding `key` to every pixel value (mod 256)."""
+    img = Image.open(image_path).convert("RGB")
+    pixels = img.load()
+    width, height = img.size
+
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            pixels[x, y] = ((r + key) % 256, (g + key) % 256, (b + key) % 256)
+
+    img.save(output_path)
+    print(f"Saved: {output_path}")
+
+
+def add_decrypt(image_path: str, key: int, output_path: str):
+    """Decrypt an image that was encrypted with add_encrypt (same key)."""
+    img = Image.open(image_path).convert("RGB")
+    pixels = img.load()
+    width, height = img.size
+
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            pixels[x, y] = ((r - key) % 256, (g - key) % 256, (b - key) % 256)
+
+    img.save(output_path)
+    print(f"Saved: {output_path}")
+
+
+def get_valid_path(prompt: str) -> str:
+    while True:
+        path = input(prompt).strip().strip('"')
+        if os.path.isfile(path):
+            return path
+        print("File not found. Please enter a valid path.")
+
+
+def get_valid_key() -> int:
+    while True:
+        try:
+            key = int(input("Enter numeric key (0-255): ").strip())
+            if 0 <= key <= 255:
+                return key
+            print("Key must be between 0 and 255.")
+        except ValueError:
+            print("Invalid input. Please enter a whole number.")
+
+
+def main():
+    print("=" * 55)
+    print("     IMAGE ENCRYPTION TOOL — PIXEL MANIPULATION")
+    print("=" * 55)
+
+    while True:
+        print("\nChoose an option:")
+        print("  1. Encrypt/Decrypt image (XOR method)")
+        print("  2. Encrypt image (Add method)")
+        print("  3. Decrypt image (Subtract method)")
+        print("  4. Exit")
+        choice = input("Enter choice (1/2/3/4): ").strip()
+
+        if choice == '1':
+            path = get_valid_path("Enter path to image: ")
+            key = get_valid_key()
+            base, ext = os.path.splitext(path)
+            output_path = f"{base}_xor_output{ext}"
+            xor_encrypt_decrypt(path, key, output_path)
+            print("Note: run this same operation again on the output ")
+            print("with the same key to get the original image back.")
+
+        elif choice == '2':
+            path = get_valid_path("Enter path to image: ")
+            key = get_valid_key()
+            base, ext = os.path.splitext(path)
+            output_path = f"{base}_encrypted{ext}"
+            add_encrypt(path, key, output_path)
+
+        elif choice == '3':
+            path = get_valid_path("Enter path to encrypted image: ")
+            key = get_valid_key()
+            base, ext = os.path.splitext(path)
+            output_path = f"{base}_decrypted{ext}"
+            add_decrypt(path, key, output_path)
+
+        elif choice == '4':
+            print("Exiting program. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please enter 1, 2, 3, or 4.")
+
+
+if __name__ == "__main__":
+    main()
